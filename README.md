@@ -1,9 +1,9 @@
 # solarws
-Webservice para utilização da lib SOLRJ
+Webservice para utilização do SOLRJ em aplicações que não são Java 8
 
 #Especificações
-Jersey 1.4
-Java 8
-Tomcat 8
-Solar 6.2
-Solrj 6.2
+Jersey 1.4 <br />
+Java 8 <br />
+Tomcat 8 <br />
+Solar 6.2 <br />
+Solrj 6.2 <br />
