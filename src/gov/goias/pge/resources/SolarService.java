@@ -43,6 +43,7 @@ public class SolarService {
 			File file = null;
 			file = new File("/mnt/CEJUR/" + nomeArquivo);
 			if(!file.exists()){
+				System.out.println("ARQUIVO "+nomeArquivo+" NÃO ENCONTRADO.");
 				throw new Exception("Arquivo não encontrado.");
 			}
 			
