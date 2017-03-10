@@ -38,12 +38,12 @@ public class SolarService {
 	@Produces("application/json")
 	public void indexFile(@PathParam("core") String core, @PathParam("nomeArquivo") String nomeArquivo) throws Exception{
 		try{
-			String urlString = "http://10.6.56.150:8983/solr/PGE_CEJUR/";
+			String urlString = "http://10.6.56.150:8983/solr/"+core+"/";
 
 			File file = null;
-			file = new File("/mnt/CEJUR/" + nomeArquivo);
+			file = new File("/mnt/disco02/CEJUR/" + nomeArquivo);
+			System.out.println("/mnt/disco02/CEJUR/" + nomeArquivo);
 			if(!file.exists()){
-				System.out.println("ARQUIVO "+nomeArquivo+" NÃO ENCONTRADO.");
 				throw new Exception("Arquivo não encontrado.");
 			}
 			
