@@ -1,15 +1,16 @@
 package gov.goias.pge.resources;
 
+import Util.DataUtil;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.request.ContentStreamUpdateRequest;
-import org.apache.solr.common.util.NamedList;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import java.io.File;
+import java.util.Date;
 
 @Path("/solarservice")
 public class SolarService {
@@ -18,28 +19,34 @@ public class SolarService {
 		SUCESSO, ERRO
 	}
 
+	public enum CORE{
+		PGE_PROV_HOMO, PGE_PROV_PROD, PGE_CEJUR
+	}
+
 	@Path("/")
 	@GET
 	@Produces("application/json")
 	public String index(){
-		return montaRespostaJson(Codigo.SUCESSO.toString(), "index","");
-	}
+		String json = "";
 
-	@Path("/delete/{core}/{id}")
-	@GET
-	@Produces("application/json")
-	public String deleteIndex(@PathParam("core") String core, @PathParam("id") String id){
-		try {
-			String urlString = "http://10.6.56.150:8983/solr/"+core+"/";
-			SolrClient solr = new HttpSolrClient.Builder(urlString).build();
-			id = id.replaceAll("_", " ");
-			solr.deleteById(id);
-			solr.commit();
-			solr.close();
-			return montaRespostaJson(Codigo.SUCESSO.toString(),"deleteIndex("+core+","+id+")","");
-		} catch (Exception e) {
-			return montaRespostaJson(Codigo.ERRO.toString(),"deleteIndex("+core+","+id+")",e.getMessage());
-		}
+        json += " {";
+        json += "     \"metodos\": {";
+        json += "         \"deleteIndex\": {";
+        json += "             \"parametros\":\"core,id\"";
+        json += "         },";
+        json += "         \"indexFile\": {";
+        json += "             \"parametros\":\"core,nomeArquivo\"";
+        json += "         }";
+        json += "     },";
+        json += "     \"retorno\":{";
+        json += "     \"resultado\": \"SUCESSO/ERRO\",";
+        json += "             \"metodo\":\"METODO INVOCADO\",";
+        json += "             \"descricao\": \"ERRO\"";
+        json += "     },";
+        json += " \"versao\":\"1.0\" ";
+        json += " }";
+
+		return json;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -50,7 +57,8 @@ public class SolarService {
 		try {
 			String urlString = "http://10.6.56.150:8983/solr/"+core+"/";
 			nomeArquivo = nomeArquivo.replace("+", " ");
-			File file = new File(nomeArquivo);
+			//file = new File("/mnt/disco02/CEJUR/" + nomeArquivo);
+			File file = new File(montaCaminhoFisicoArquivo(nomeArquivo, core));
 			if (!file.exists()) {
 				throw new Exception("Arquivo "+nomeArquivo+" não encontrado");
 			}
@@ -58,12 +66,39 @@ public class SolarService {
 			ContentStreamUpdateRequest req = new ContentStreamUpdateRequest("/update/extract");
 			req.addFile(file, "");
 			req.setParam("extractOnly", "false");
-			NamedList<Object> result = client.request(req);
+			client.request(req);
 			client.commit();
 			client.close();
 			return montaRespostaJson(Codigo.SUCESSO.toString(),"indexFile("+core+","+nomeArquivo+")","");
 		} catch (Exception e) {
 			return montaRespostaJson(Codigo.ERRO.toString(),"indexFile("+core+","+nomeArquivo+")",e.getMessage());
+		}
+	}
+
+	@Path("/delete/{core}/{id}")
+	@GET
+	@Produces("application/json")
+	public String deleteIndex(@PathParam("core") String core, @PathParam("id") String id){
+		try {
+			String urlString = "http://10.6.56.150:8983/solr/"+core+"/";
+			SolrClient solr = new HttpSolrClient.Builder(urlString).build();
+			id = montaCaminhoFisicoArquivo(id.replaceAll("_", " "), core);
+			solr.deleteById(id);
+			solr.commit();
+			solr.close();
+			return montaRespostaJson(Codigo.SUCESSO.toString(),"deleteIndex("+core+","+id+")","");
+		} catch (Exception e) {
+			return montaRespostaJson(Codigo.ERRO.toString(),"deleteIndex("+core+","+id+")",e.getMessage());
+		}
+	}
+
+	private String montaCaminhoFisicoArquivo(String arquivo, String core){
+		if(core.equals(CORE.PGE_PROV_HOMO.toString())){
+			return "/mnt/disco02/providencias/homo/" + DataUtil.formatar(new Date(), "YYYY")+"/"+ DataUtil.formatar(new Date(), "MM")+"/"+ arquivo;
+		}else if(core.equals(CORE.PGE_PROV_PROD.toString())){
+			return "/mnt/disco02/providencias/prod/" + DataUtil.formatar(new Date(), "YYYY")+"/"+ DataUtil.formatar(new Date(), "MM")+"/"+ arquivo;
+		}else{ //PGE_CEJUR
+			return "/mnt/disco02/CEJUR/" + arquivo;
 		}
 	}
 
