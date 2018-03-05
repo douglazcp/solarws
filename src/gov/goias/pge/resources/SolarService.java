@@ -38,8 +38,8 @@ public class SolarService {
         json += "			  \"url\":\"/solarws/solarservice/deleteIndex/core/id\"";
         json += "         },";
         json += "         \"indexFile\": {";
-        json += "             \"parametros\":\"core/nomeArquivo\",";
-		json += "			  \"url\":\"/solarws/solarservice/indexFile/core/id\"";
+        json += "             \"parametros\":\"core/pasta/nomeArquivo\",";
+		json += "			  \"url\":\"/solarws/solarservice/indexFile/core/pasta/id\"";
         json += "         }";
         json += "     },";
         json += "     \"retorno\":{";
@@ -54,15 +54,15 @@ public class SolarService {
 	}
 
 	@SuppressWarnings("unchecked")
-	@Path("/indexFile/{core}/{nomeArquivo}")
+	@Path("/indexFile/{core}/{pasta}/{nomeArquivo}")
 	@GET
 	@Produces("application/json")
-	public String indexFile(@PathParam("core") String core, @PathParam("nomeArquivo") String nomeArquivo){
+	public String indexFile(@PathParam("core") String core, @PathParam("pasta") String pasta, @PathParam("nomeArquivo") String nomeArquivo){
 		try {
 			nomeArquivo = nomeArquivo.replace("+", " ");
 			//file = new File("/mnt/disco02/CEJUR/" + nomeArquivo);
-			//File file = new File(montaCaminhoFisicoArquivo(nomeArquivo, core));
-			File file = new File("/home/douglas-cp/Documents/pge/workspace/envriroment/configs_sicop/solr/2018/02/"+nomeArquivo);
+			File file = new File(montaCaminhoFisicoArquivo(pasta, nomeArquivo, core));
+			//File file = new File("/home/douglas-cp/Documents/pge/workspace/envriroment/configs_sicop/solr/2018/02/"+nomeArquivo);
 			if (!file.exists()) {
 				throw new Exception("Arquivo "+nomeArquivo+" não encontrado");
 			}
@@ -120,11 +120,17 @@ public class SolarService {
 		}
 	}
 
-	private String montaCaminhoFisicoArquivo(String arquivo, String core){
+	private String montaCaminhoFisicoArquivo(String pasta, String arquivo, String core){
+		String pastaFisica;
+		if(pasta.equals("0")){
+			pastaFisica = DataUtil.formatar(new Date(), "YYYY")+"/"+ DataUtil.formatar(new Date(), "MM")+"/";
+		}else{
+			pastaFisica = pasta.split("_")[0] + "/"+pasta.split("_")[1]+"/";
+		}
 		if(core.equals(CORE.PGE_PROV_HOMO.toString())){
-			return "/mnt/disco02/providencias/homo/" + DataUtil.formatar(new Date(), "YYYY")+"/"+ DataUtil.formatar(new Date(), "MM")+"/"+ arquivo;
+			return "/mnt/disco02/providencias/homo/" + pastaFisica + arquivo;
 		}else if(core.equals(CORE.PGE_PROV_PROD.toString())){
-			return "/mnt/disco02/providencias/prod/" + DataUtil.formatar(new Date(), "YYYY")+"/"+ DataUtil.formatar(new Date(), "MM")+"/"+ arquivo;
+			return "/mnt/disco02/providencias/prod/" + pastaFisica + arquivo ;
 		}else{ //PGE_CEJUR
 			return "/mnt/disco02/CEJUR/" + arquivo;
 		}
